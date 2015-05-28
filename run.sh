@@ -11,7 +11,7 @@ input=$1
 [ -f $input ] || exit -1;
 
 # check neccessary files
-files="phones.60-48-39.map timitdic.txt timit_norm_trans.pl make_lexicon_fst.pl add_disambig.pl"
+files="phones.60-48-39.map timitdic.txt timit_norm_trans.pl make_lexicon_fst.pl add_disambig.pl fstaddselfloops"
 for f in $files;
 do
    [ -f $f ] || exit -1;
@@ -48,7 +48,7 @@ if [ ! -f Lexicon.fst ]; then
    ./make_lexicon_fst.pl lexicon.39.txt 0.5 "sil" \
       | fstcompile --isymbols=phones_disambig.txt \
       --osymbols=words.txt --keep_isymbols=false --keep_osymbols=false \
-      | fstaddselfloops  "echo $phone_disambig_symbol |" \
+      | ./fstaddselfloops  "echo $phone_disambig_symbol |" \
       "echo $word_disambig_symbol |" \
       | fstarcsort --sort_type=olabel > Lexicon.fst 
 fi
