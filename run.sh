@@ -76,19 +76,12 @@ fi
    fstcompile --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt input.log | \
       fstarcsort --sort_type=olabel > input.fst
 
-if [ ! -f fstprintallpath ]; then
-   openfst=/home/loach/kaldi/kaldi-trunk/tools/openfst
-   g++ fstprintallpath.cpp -L $openfst/lib -lfst -ldl -I $openfst/include -o  fstprintallpath
-fi
-
 # compose Lexicon.fst and input.fst and output the shortest path
 fstcompose input.fst Lexicon.fst | \
-   fstshortestpath --nshortest=100 | \
-   ./fstprintallpath - words.txt | \
-   sed -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g' -e 's/  / /g'
-#   fstprint --isymbols=phones_disambig.txt --osymbols=words.txt | \
-#   cut -f4 | grep -v "<eps>" | grep -v "0" | tac | tr '\n' ' '
-#echo
+   fstshortestpath --nshortest=1 | \
+   fstprint --isymbols=phones_disambig.txt --osymbols=words.txt | \
+   cut -f4 | grep -v "<eps>" | grep -v "0" | tac | tr '\n' ' '
+echo
 
 # use the following command to draw the fst.
 # fstdraw --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt -portrait input.fst | \
