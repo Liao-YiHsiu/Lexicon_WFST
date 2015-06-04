@@ -7,6 +7,7 @@ if [ $# -ne 1 ]; then
 fi
 
 input=$1
+tmpdir=$(mktemp -d)
 
 [ -f $input ] || exit -1;
 
@@ -54,27 +55,26 @@ if [ ! -f Lexicon.fst ]; then
 fi
 
 # generate input.fst
-   ./timit_norm_trans.pl -i $input -m phones.60-48-39.map -from 60 -to 39 | uniq > input.39 
+   ./timit_norm_trans.pl -i $input -m phones.60-48-39.map -from 60 -to 39 | uniq > $tmpdir/input.39 
    
-   rm -f input.log
    # read example
    j=0; 
    for phone in $(cat input.39); 
    do 
-      echo "$j $((j+1)) $phone $phone 0" >> input.log
+      echo "$j $((j+1)) $phone $phone 0" >> $tmpdir/input.log
       # deletion
-      echo "$j $((j+1)) $phone <eps> 100" >> input.log
+      echo "$j $((j+1)) $phone <eps> 100" >> $tmpdir/input.log
       # substitution
       for tmp in $(cat phone_list | grep -w -v $phone);
       do
-         echo "$j $((j+1)) $phone $tmp 100" >> input.log
+         echo "$j $((j+1)) $phone $tmp 100" >> $tmpdir/input.log
       done
       j=$((j+1))
    done
-   echo "$j 0" >> input.log
+   echo "$j 0" >> $tmpdir/input.log
    
-   fstcompile --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt input.log | \
-      fstarcsort --sort_type=olabel > input.fst
+   fstcompile --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt $tmpdir/input.log | \
+      fstarcsort --sort_type=olabel > $tmpdir/input.fst
 
 if [ ! -f fstprintallpath ]; then
    openfst=/home/loach/kaldi/kaldi-trunk/tools/openfst
@@ -82,13 +82,15 @@ if [ ! -f fstprintallpath ]; then
 fi
 
 # compose Lexicon.fst and input.fst and output the shortest path
-fstcompose input.fst Lexicon.fst | \
+fstcompose $tmpdir/input.fst Lexicon.fst | \
    fstshortestpath --nshortest=100 | \
    ./fstprintallpath - words.txt | \
    sed -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g' -e 's/  / /g'
 #   fstprint --isymbols=phones_disambig.txt --osymbols=words.txt | \
 #   cut -f4 | grep -v "<eps>" | grep -v "0" | tac | tr '\n' ' '
 #echo
+
+rm -rf $tmpdir
 
 # use the following command to draw the fst.
 # fstdraw --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt -portrait input.fst | \
