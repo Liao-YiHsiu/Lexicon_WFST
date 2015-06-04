@@ -78,7 +78,7 @@ fi
 
 if [ ! -f fstprintallpath ]; then
    openfst=/home/loach/kaldi/kaldi-trunk/tools/openfst
-   g++ fstprintallpath.cpp -L $openfst/lib -lfst -ldl -I $openfst/include -o  fstprintallpath
+   g++ fstprintallpath.cpp $openfst/lib/libfst.a -ldl -I $openfst/include -o  fstprintallpath
 fi
 
 # compose Lexicon.fst and input.fst and output the shortest path
