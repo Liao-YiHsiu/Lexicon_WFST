@@ -9,6 +9,7 @@ fi
 input=$1
 tmpdir=$(mktemp -d)
 
+[ $input == "-" ] && input=$tmpdir/input && cat /dev/stdin > $input
 [ -f $input ] || exit -1;
 
 # check neccessary files
@@ -59,7 +60,7 @@ fi
    
    # read example
    j=0; 
-   for phone in $(cat input.39); 
+   for phone in $(cat $tmpdir/input.39); 
    do 
       echo "$j $((j+1)) $phone $phone 0" >> $tmpdir/input.log
       # deletion
