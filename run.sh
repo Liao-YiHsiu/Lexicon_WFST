@@ -30,6 +30,7 @@ if [ ! -f Lexicon.fst ]; then
    echo "<s> sil" >> lexicon.txt
    echo "</s> sil" >> lexicon.txt
    echo "SIL sil" >> lexicon.txt
+   paste phone_list phone_list >> lexicon.txt
 
    ./timit_norm_trans.pl -i lexicon.txt -m phones.60-48-39.map -from 60 -to 39 > lexicon.39.txt
 
@@ -56,7 +57,7 @@ if [ ! -f Lexicon.fst ]; then
 fi
 
 # generate input.fst
-   ./timit_norm_trans.pl -i $input -m phones.60-48-39.map -from 60 -to 39 | uniq > $tmpdir/input.39 
+   ./timit_norm_trans.pl -i $input -m phones.60-48-39.map -from 60 -to 39 | sed -e 's/\bsil\b/ /g'| sed -e 's/  / /g' > $tmpdir/input.39 
    
    # read example
    j=0; 
@@ -64,12 +65,12 @@ fi
    do 
       echo "$j $((j+1)) $phone $phone 0" >> $tmpdir/input.log
       # deletion
-      echo "$j $((j+1)) $phone <eps> 100" >> $tmpdir/input.log
-      # substitution
-      for tmp in $(cat phone_list | grep -w -v $phone);
-      do
-         echo "$j $((j+1)) $phone $tmp 100" >> $tmpdir/input.log
-      done
+      #echo "$j $((j+1)) $phone <eps> 100" >> $tmpdir/input.log
+      ## substitution
+      #for tmp in $(cat phone_list | grep -w -v $phone);
+      #do
+      #   echo "$j $((j+1)) $phone $tmp 100" >> $tmpdir/input.log
+      #done
       j=$((j+1))
    done
    echo "$j 0" >> $tmpdir/input.log
@@ -82,11 +83,22 @@ if [ ! -f fstprintallpath ]; then
    g++ fstprintallpath.cpp $openfst/lib/libfst.a -ldl -I $openfst/include -o  fstprintallpath
 fi
 
-# compose Lexicon.fst and input.fst and output the shortest path
-fstcompose $tmpdir/input.fst Lexicon.fst | \
+#subst="[^a-zA-Z]\($(cat phone_list | tr '\n' '|' | sed -e 's#|#\\\|#g') \)[^a-zA-Z]"
+command="fstcompose $tmpdir/input.fst Lexicon.fst | \
    fstshortestpath --nshortest=100 | \
-   ./fstprintallpath - words.txt | \
-   sed -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g' -e 's/  / /g'
+   ./fstprintallpath - words.txt  "
+command+=" | sed "
+command+=" -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g' "
+command+=$(while read phone; do echo " -e \"s/\b${phone}\b/ /g\""; done < phone_list)
+command+=" | tr -s ' ' | sort | uniq"
+
+eval $command
+# compose Lexicon.fst and input.fst and output the shortest path
+#fstcompose $tmpdir/input.fst Lexicon.fst | \
+#   fstshortestpath --nshortest=100 | \
+#   ./fstprintallpath - words.txt  \
+#   $subst | \
+#   sed -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g'  -e 's/  */ /g' 
 #   fstprint --isymbols=phones_disambig.txt --osymbols=words.txt | \
 #   cut -f4 | grep -v "<eps>" | grep -v "0" | tac | tr '\n' ' '
 #echo
