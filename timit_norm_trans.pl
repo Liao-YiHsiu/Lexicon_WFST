@@ -34,8 +34,10 @@ use Getopt::Long;
 die "$usage" unless(@ARGV >= 1);
 my ($in_trans, $phone_map, $num_phones_out);
 my $num_phones_in = 60;
+my $ignore_first;
 GetOptions ("i=s" => \$in_trans,          # Input transcription
 	    "m=s" => \$phone_map,         # File containing phone mappings
+	    "ignore" => \$ignore_first,   # Input #phones: must be 60 or 48
 	    "from=i" => \$num_phones_in,  # Input #phones: must be 60 or 48
 	    "to=i" => \$num_phones_out ); # Output #phones: must be 48 or 39
 
@@ -74,9 +76,19 @@ if ($num_seen_phones != $num_phones_out) {
 open(T, "<$in_trans") or die "Cannot open transcription file '$in_trans': $!";
 while (<T>) {
   chomp;
-  $_ =~ m:^(\S+)\s+(.+): or die "Bad line: $_";
-  my $utt_id = $1;
-  my $trans = $2;
+  #$_ =~ m:^(\S+)\s+(.+): or die "Bad line: $_";
+  #my $utt_id = $1;
+  #my $trans = $2;
+  my $utt_id = "";
+  my $trans  = "";
+
+  if ($ignore_first){
+     $_ =~ m:^(\S+)\s+(.+): or die "Bad line: $_";
+     $utt_id = $1;
+     $trans = $2;
+  }else{
+     $trans = $_;
+  }
 
   $trans =~ s/q//g;  # Remove glottal stops.
   $trans =~ s/^\s*//; $trans =~ s/\s*$//;  # Normalize spaces

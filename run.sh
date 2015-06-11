@@ -19,6 +19,9 @@ do
    [ -f $f ] || exit -1;
 done
 
+# make programs
+make;
+
 #generate Lexicon.fst
 if [ ! -f Lexicon.fst ]; then
    cut -f3 phones.60-48-39.map | grep -v "q" | sort | uniq > phone_list
@@ -32,7 +35,7 @@ if [ ! -f Lexicon.fst ]; then
    echo "SIL sil" >> lexicon.txt
    paste phone_list phone_list >> lexicon.txt
 
-   ./timit_norm_trans.pl -i lexicon.txt -m phones.60-48-39.map -from 60 -to 39 > lexicon.39.txt
+   ./timit_norm_trans.pl -ignore -i lexicon.txt -m phones.60-48-39.map -from 60 -to 39 > lexicon.39.txt
 
    cut -f1 -d ' ' lexicon.39.txt | \
       cat - <(echo "#0") | \
