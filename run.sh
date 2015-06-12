@@ -7,7 +7,9 @@ if [ $# -ne 1 ]; then
 fi
 
 input=$1
+tmpdir=$(mktemp -d)
 
+[ $input == "-" ] && input=$tmpdir/input && cat /dev/stdin > $input
 [ -f $input ] || exit -1;
 
 # check neccessary files
@@ -16,6 +18,9 @@ for f in $files;
 do
    [ -f $f ] || exit -1;
 done
+
+# make programs
+make;
 
 #generate Lexicon.fst
 if [ ! -f Lexicon.fst ]; then
@@ -28,8 +33,9 @@ if [ ! -f Lexicon.fst ]; then
    echo "<s> sil" >> lexicon.txt
    echo "</s> sil" >> lexicon.txt
    echo "SIL sil" >> lexicon.txt
+   paste phone_list phone_list >> lexicon.txt
 
-   ./timit_norm_trans.pl -i lexicon.txt -m phones.60-48-39.map -from 60 -to 39 > lexicon.39.txt
+   ./timit_norm_trans.pl -ignore -i lexicon.txt -m phones.60-48-39.map -from 60 -to 39 > lexicon.39.txt
 
    cut -f1 -d ' ' lexicon.39.txt | \
       cat - <(echo "#0") | \
@@ -54,34 +60,53 @@ if [ ! -f Lexicon.fst ]; then
 fi
 
 # generate input.fst
-   ./timit_norm_trans.pl -i $input -m phones.60-48-39.map -from 60 -to 39 | uniq > input.39 
+   ./timit_norm_trans.pl -i $input -m phones.60-48-39.map -from 60 -to 39 | sed -e 's/\bsil\b/ /g'| sed -e 's/  / /g' > $tmpdir/input.39 
    
-   rm -f input.log
    # read example
    j=0; 
-   for phone in $(cat input.39); 
+   for phone in $(cat $tmpdir/input.39); 
    do 
-      echo "$j $((j+1)) $phone $phone 0" >> input.log
+      echo "$j $((j+1)) $phone $phone 0" >> $tmpdir/input.log
       # deletion
-      echo "$j $((j+1)) $phone <eps> 100" >> input.log
-      # substitution
-      for tmp in $(cat phone_list | grep -w -v $phone);
-      do
-         echo "$j $((j+1)) $phone $tmp 100" >> input.log
-      done
+      #echo "$j $((j+1)) $phone <eps> 100" >> $tmpdir/input.log
+      ## substitution
+      #for tmp in $(cat phone_list | grep -w -v $phone);
+      #do
+      #   echo "$j $((j+1)) $phone $tmp 100" >> $tmpdir/input.log
+      #done
       j=$((j+1))
    done
-   echo "$j 0" >> input.log
+   echo "$j 0" >> $tmpdir/input.log
    
-   fstcompile --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt input.log | \
-      fstarcsort --sort_type=olabel > input.fst
+   fstcompile --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt $tmpdir/input.log | \
+      fstarcsort --sort_type=olabel > $tmpdir/input.fst
 
+if [ ! -f fstprintallpath ]; then
+   openfst=/home/loach/kaldi/kaldi-trunk/tools/openfst
+   g++ fstprintallpath.cpp $openfst/lib/libfst.a -ldl -I $openfst/include -o  fstprintallpath
+fi
+
+#subst="[^a-zA-Z]\($(cat phone_list | tr '\n' '|' | sed -e 's#|#\\\|#g') \)[^a-zA-Z]"
+command="fstcompose $tmpdir/input.fst Lexicon.fst | \
+   fstshortestpath --nshortest=100 | \
+   ./fstprintallpath - words.txt  "
+command+=" | sed "
+command+=" -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g' "
+command+=$(while read phone; do echo " -e \"s/\b${phone}\b/ /g\""; done < phone_list)
+command+=" | tr -s ' ' | sed -e 's/^ //g' | sort | uniq"
+
+eval $command
 # compose Lexicon.fst and input.fst and output the shortest path
-fstcompose input.fst Lexicon.fst | \
-   fstshortestpath --nshortest=1 | \
-   fstprint --isymbols=phones_disambig.txt --osymbols=words.txt | \
-   cut -f4 | grep -v "<eps>" | grep -v "0" | tac | tr '\n' ' '
-echo
+#fstcompose $tmpdir/input.fst Lexicon.fst | \
+#   fstshortestpath --nshortest=100 | \
+#   ./fstprintallpath - words.txt  \
+#   $subst | \
+#   sed -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g'  -e 's/  */ /g' 
+#   fstprint --isymbols=phones_disambig.txt --osymbols=words.txt | \
+#   cut -f4 | grep -v "<eps>" | grep -v "0" | tac | tr '\n' ' '
+#echo
+
+rm -rf $tmpdir
 
 # use the following command to draw the fst.
 # fstdraw --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt -portrait input.fst | \
