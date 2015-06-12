@@ -1,13 +1,18 @@
 #!/bin/bash
 
-if [ $# -ne 1 ]; then
-   echo "Usage: $0 input_phone_seq_file"
-   echo "ex. $0 example"
+if [ $# -ne 1 ] && [ $# -ne 2 ]; then
+   echo "Usage: $0 input_phone_seq_file [nbest=1]"
+   echo "ex. $0 example 100"
+   echo ""
+   echo "Notice the number of output is not exactly nbest."
+   echo "The duplicated results are merged."
    exit -1;
 fi
 
 input=$1
 tmpdir=$(mktemp -d)
+nbest=1
+[ $# -gt 1 ] && nbest=$2
 
 [ $input == "-" ] && input=$tmpdir/input && cat /dev/stdin > $input
 [ -f $input ] || exit -1;
@@ -20,7 +25,7 @@ do
 done
 
 # make programs
-make;
+make > /dev/null
 
 #generate Lexicon.fst
 if [ ! -f Lexicon.fst ]; then
@@ -81,14 +86,8 @@ fi
    fstcompile --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt $tmpdir/input.log | \
       fstarcsort --sort_type=olabel > $tmpdir/input.fst
 
-if [ ! -f fstprintallpath ]; then
-   openfst=/home/loach/kaldi/kaldi-trunk/tools/openfst
-   g++ fstprintallpath.cpp $openfst/lib/libfst.a -ldl -I $openfst/include -o  fstprintallpath
-fi
-
-#subst="[^a-zA-Z]\($(cat phone_list | tr '\n' '|' | sed -e 's#|#\\\|#g') \)[^a-zA-Z]"
 command="fstcompose $tmpdir/input.fst Lexicon.fst | \
-   fstshortestpath --nshortest=100 | \
+   fstshortestpath --nshortest=$nbest | \
    ./fstprintallpath - words.txt  "
 command+=" | sed "
 command+=" -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g' "
@@ -96,15 +95,6 @@ command+=$(while read phone; do echo " -e \"s/\b${phone}\b/ /g\""; done < phone_
 command+=" | tr -s ' ' | sed -e 's/^ //g' | sort | uniq"
 
 eval $command
-# compose Lexicon.fst and input.fst and output the shortest path
-#fstcompose $tmpdir/input.fst Lexicon.fst | \
-#   fstshortestpath --nshortest=100 | \
-#   ./fstprintallpath - words.txt  \
-#   $subst | \
-#   sed -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g'  -e 's/  */ /g' 
-#   fstprint --isymbols=phones_disambig.txt --osymbols=words.txt | \
-#   cut -f4 | grep -v "<eps>" | grep -v "0" | tac | tr '\n' ' '
-#echo
 
 rm -rf $tmpdir
 
