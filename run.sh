@@ -65,23 +65,25 @@ if [ ! -f Lexicon.fst ]; then
 fi
 
 # generate input.fst
-   ./timit_norm_trans.pl -i $input -m phones.60-48-39.map -from 60 -to 39 | sed -e 's/\bsil\b/ /g'| sed -e 's/  / /g' > $tmpdir/input.39 
-   
-   # read example
-   j=0; 
-   for phone in $(cat $tmpdir/input.39); 
-   do 
-      echo "$j $((j+1)) $phone $phone 0" >> $tmpdir/input.log
-      # deletion
-      #echo "$j $((j+1)) $phone <eps> 100" >> $tmpdir/input.log
-      ## substitution
-      #for tmp in $(cat phone_list | grep -w -v $phone);
-      #do
-      #   echo "$j $((j+1)) $phone $tmp 100" >> $tmpdir/input.log
-      #done
-      j=$((j+1))
-   done
-   echo "$j 0" >> $tmpdir/input.log
+#   ./timit_norm_trans.pl -i $input -m phones.60-48-39.map -from 60 -to 39 | sed -e 's/\bsil\b/ /g'| sed -e 's/  / /g' > $tmpdir/input.39 
+#   
+#   # read example
+#   j=0; 
+#   for phone in $(cat $tmpdir/input.39); 
+#   do 
+#      echo "$j $((j+1)) $phone $phone 0" >> $tmpdir/input.log
+#      # deletion
+#      #echo "$j $((j+1)) $phone <eps> 100" >> $tmpdir/input.log
+#      ## substitution
+#      #for tmp in $(cat phone_list | grep -w -v $phone);
+#      #do
+#      #   echo "$j $((j+1)) $phone $tmp 100" >> $tmpdir/input.log
+#      #done
+#      j=$((j+1))
+#   done
+#   echo "$j 0" >> $tmpdir/input.log
+
+   ./generate $input phones.60-39.map rule.out > $tmpdir/input.log
    
    fstcompile --isymbols=phones_disambig.txt --osymbols=phones_disambig.txt $tmpdir/input.log | \
       fstarcsort --sort_type=olabel > $tmpdir/input.fst
