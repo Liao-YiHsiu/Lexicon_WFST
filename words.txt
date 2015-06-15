@@ -1015,8 +1015,8 @@ cling 1013
 clockwork 1014
 closer 1015
 closet 1016
-close~adj 1017
-close~v 1018
+close 1017
+close 1018
 closing 1019
 clot 1020
 cloth 1021
@@ -3133,8 +3133,8 @@ lived 3131
 lively 3132
 lives 3133
 livestock 3134
-live~adj 3135
-live~v 3136
+live 3135
+live 3136
 living 3137
 loaded 3138
 loads 3139
@@ -3631,8 +3631,8 @@ obey 3629
 obeying 3630
 objective 3631
 objectives 3632
-object~n 3633
-object~v 3634
+object 3633
+object 3634
 objects 3635
 observance 3636
 observe 3637
@@ -4115,8 +4115,8 @@ prescribe 4113
 prescription 4114
 presented 4115
 presently 4116
-present~n~adj 4117
-present~v 4118
+present~n 4117
+present 4118
 presents 4119
 preservation 4120
 preserved 4121
@@ -4182,8 +4182,8 @@ programs 4180
 progress 4181
 progression 4182
 projected 4183
-project~n 4184
-project~v 4185
+project 4184
+project 4185
 projects 4186
 prominent 4187
 promote 4188
@@ -4753,8 +4753,8 @@ sensitive 4751
 sensory 4752
 sensual 4753
 sentiment 4754
-separate~adj 4755
-separate~v 4756
+separate 4755
+separate 4756
 sequoia 4757
 series 4758
 sermon 4759
@@ -5852,8 +5852,8 @@ used 5850
 useful 5851
 useless 5852
 uses 5853
-use~n 5854
-use~v 5855
+use 5854
+use 5855
 using 5856
 usual 5857
 usually 5858
@@ -6168,8 +6168,8 @@ worth 6166
 would 6167
 would've 6168
 wounds 6169
-wound~n 6170
-wound~v 6171
+wound 6170
+wound 6171
 wrap 6172
 wraps 6173
 wrinkled 6174
