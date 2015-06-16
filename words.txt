@@ -4115,7 +4115,7 @@ prescribe 4113
 prescription 4114
 presented 4115
 presently 4116
-present~n 4117
+present 4117
 present 4118
 presents 4119
 preservation 4120
@@ -4338,8 +4338,8 @@ readiness 4336
 reading 4337
 reads 4338
 ready 4339
-read~v_past 4340
-read~v_pres 4341
+read 4340
+read 4341
 real 4342
 realism 4343
 realistic 4344

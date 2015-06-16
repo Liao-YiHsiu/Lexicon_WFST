@@ -34,7 +34,7 @@ if [ ! -f Lexicon.fst ]; then
    echo "<eps> 0" > phones_num
    awk '{ print $0 " " FNR }' phone_list >> phones_num
 
-   grep -v -E "^;" timitdic.txt | sed -e 's/\///g' -e 's/[0-9]//g' -e 's/\~[a-zA-Z]* / /g' > lexicon.txt
+   grep -v -E "^;" timitdic.txt | sed -e 's/\///g' -e 's/[0-9]//g' -e 's/\~[a-zA-Z_\~]* / /g' > lexicon.txt
    echo "<s> sil" >> lexicon.txt
    echo "</s> sil" >> lexicon.txt
    echo "SIL sil" >> lexicon.txt
