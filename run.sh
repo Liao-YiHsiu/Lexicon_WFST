@@ -93,7 +93,8 @@ command="fstcompose $tmpdir/input.fst Lexicon.fst | \
    ./fstprintallpath - words.txt  "
 command+=" | sed "
 command+=" -e 's/<s>//g' -e 's/<\/s>//g' -e 's/SIL//g' "
-command+=$(while read phone; do echo " -e \"s/\b${phone}\b/ /g\""; done < phone_list)
+command+=" -e 's/^/ /g' -e 's/$/ /g' "
+command+=$(while read phone; do echo " -e \"s/ ${phone} / /g\""; done < phone_list)
 command+=" | tr -s ' ' | sed -e 's/^ //g' | sort | uniq"
 
 eval $command
